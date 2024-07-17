@@ -1,3 +1,22 @@
+
+
+"""
+
+Known issues:
+ - Weird concatenation of business name and street (originates from CSV)
+ - Sometimes a contact becomes a subtask, rather than a task (is this random or predictable)
+
+
+
+
+"""
+
+
+
+
+
+
+
 print("starting")
 
 import csv, json
@@ -66,10 +85,9 @@ export_table = [[
     "Description",
     "Assignees",
     "Status",
-    "CU List",
+    "List (ClickUp)",
     "Due Date",
     "Start Date",
-    "Date Created",
     "Date Created",
     "Priority",
     "Tags",
@@ -92,7 +110,7 @@ export_table = [[
 ]]
 
 export_table_header = {k:v for v,k in enumerate(export_table[0])}
-def add_contact(description, name, email, phone, address, website):
+def add_contact(description, name, email, phone, address, website, timezone=""):
     row = ["" for i in range(len(export_table[0]))]
 
     row[export_table_header["Description"]] = description
@@ -101,6 +119,9 @@ def add_contact(description, name, email, phone, address, website):
     row[export_table_header["Office Phone"]] = extract_phone(phone)
     row[export_table_header["Mailing Address"]] = address
     row[export_table_header["Website"]] = website
+    row[export_table_header["Time Zone"]] = timezone
+
+    row[export_table_header["Priority"]] = "No Priority"
 
     export_table.append(row)
 
@@ -127,6 +148,15 @@ with open("Report 07_16_2024T12_31_17.csv", "r") as f:
 
         desc = "exported from Quickbooks: " + json.dumps({k:v for k,v in zip(header, row)})
 
+        street = row[3]
+        # street_start = 0
+        # while street_start < len(street):
+        #     if street[street_start].isdigit():
+        #         break
+        #     street_start += 1
+        # if 
+        address = compile_address(street, *row[4:8])
+
         website = ""
         if "." in row[0] and " " not in row[0]:
             website = row[0]
@@ -136,7 +166,7 @@ with open("Report 07_16_2024T12_31_17.csv", "r") as f:
             name=row[1],
             email=row[2],
             phone=row[9],
-            address=compile_address(*row[3:8]),
+            address=address,
             website=website
         )
 
@@ -169,7 +199,8 @@ with open("Contacts.csv", "r") as f:
             email=row[9],
             phone=row[3],
             address=compile_address(row[14], *row[17:21]),
-            website=row[10]
+            website=row[10],
+            timezone=row[12],
         )
 
 
