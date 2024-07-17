@@ -110,7 +110,7 @@ export_table = [[
 ]]
 
 export_table_header = {k:v for v,k in enumerate(export_table[0])}
-def add_contact(description, name, email, phone, address, website, timezone=""):
+def add_contact(description, name, email, phone, address, website, title="", timezone="", tags=[]):
     row = ["" for i in range(len(export_table[0]))]
 
     row[export_table_header["Description"]] = description
@@ -119,7 +119,10 @@ def add_contact(description, name, email, phone, address, website, timezone=""):
     row[export_table_header["Office Phone"]] = extract_phone(phone)
     row[export_table_header["Mailing Address"]] = address
     row[export_table_header["Website"]] = website
+    row[export_table_header["Title"]] = title
     row[export_table_header["Time Zone"]] = timezone
+
+    row[export_table_header["Tags"]] = ",".join(tags)
 
     row[export_table_header["Priority"]] = "No Priority"
 
@@ -161,13 +164,20 @@ with open("Report 07_16_2024T12_31_17.csv", "r") as f:
         if "." in row[0] and " " not in row[0]:
             website = row[0]
 
+        tags = ["quickbooks"]
+        for i, tag in enumerate(tags):
+            tags[i] = tag.strip().lower().replace(" ", "-")
+        if len(tags) == 2 and tags[1] == "":
+            tags.pop()
+
         add_contact(
             description=desc,
             name=row[1],
             email=row[2],
             phone=row[9],
             address=address,
-            website=website
+            website=website,
+            tags=tags,
         )
 
 
@@ -193,6 +203,13 @@ with open("Contacts.csv", "r") as f:
 
         desc = "exported from Nutshell Contacts: " + json.dumps({k:v for k,v in zip(header, row)})
 
+        tags = ["nutshell"]
+        tags.extend(row[13].split(","))
+        for i, tag in enumerate(tags):
+            tags[i] = tag.strip().lower().replace(" ", "-")
+        if len(tags) == 2 and tags[1] == "":
+            tags.pop()
+
         add_contact(
             description=desc,
             name=row[1],
@@ -200,7 +217,9 @@ with open("Contacts.csv", "r") as f:
             phone=row[3],
             address=compile_address(row[14], *row[17:21]),
             website=row[10],
+            title=row[21],
             timezone=row[12],
+            tags=tags,
         )
 
 
